@@ -52,6 +52,7 @@ $('#login').submit(function (event) {
   getAssertionChallenge({username})
     .then(response => {
       const publicKey = preformatGetAssertReq(response)
+      alert(`about to get navigator.credentials.get({ publickKey: ${publicKeyCredentialToJSON(publicKey)}})`)
       return navigator.credentials.get({ publicKey })
     })
     .then(response => {
@@ -66,7 +67,6 @@ $('#login').submit(function (event) {
         alert(`Error passing assertionChallenge: ${response.message}`)
       }
     })
-    .catch(err => alert(`getAssertionChallenge failed :( with error: ${err}`))
 })
 
 const getMakeCredentialsChallenge = async formBody => {
