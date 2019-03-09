@@ -67,7 +67,7 @@ $('#login').submit(function (event) {
         alert(`Error passing assertionChallenge: ${response.message}`)
       }
     })
-    .catch(alert)
+    .catch(err => alert(`getAssertionChallenge failed :( with error: ${err}`))
 })
 
 const getMakeCredentialsChallenge = async formBody => {
@@ -85,7 +85,7 @@ const getMakeCredentialsChallenge = async formBody => {
 
     return response
   })
-  .catch(alert)
+    .catch(err => alert(`getMakeCredentialsChallenge failed :( with error: ${err}`))
 }
 
 const getAssertionChallenge = formBody => {
