@@ -2,6 +2,9 @@
   "name": "webauthn-tutorial",
   "version": "0.0.1",
   "description": "",
+  "scripts": {
+    "start": "node app.js"
+  },
   "main": "app.js",
   "dependencies": {
     "@fidm/x509": "^1.2.0",
@@ -24,5 +27,8 @@
     "url": "https://github.com/fido-alliance//issues",
     "email": "yuriy@fidoalliance.org"
   },
-  "homepage": "https://github.com/fido-alliance/#readme"
+  "homepage": "https://github.com/fido-alliance/#readme",
+  "engines": {
+  	"node": "11.6.x"
+  }
 }
