@@ -31,10 +31,83 @@ response: ${JSON.stringify(response)}`
 
   const makeCredResponse = publicKeyCredentialToJSON(newCred)
 
+  // Send the completed challenge back to the server
+  const credResponse = await sendWebAuthnResponse(makeCredResponse)
+
+  // We caught the condition where `response.status !== 'ok'` in `sendWebAuthnResponse
+
+  loadMainContainer()
+})
+
+// Handle login form submission
+$('#login').submit(function (event) {
+  event.preventDefault()
+
+  const username = this.username.value
+
+  if (!username) {
+    alert('Username is missing!')
+    return
+  }
+
+  getAssertionChallenge({username})
+    .then(response => {
+      const publicKey = preformatGetAssertReq(response)
+      return navigator.credentials.get({ publicKey })
+    })
+    .then(response => {
+      const getAssertionResponse = publicKeyCredentialToJSON(response)
+      return sendWebAuthnResponse(getAssertionResponse)
+    })
+    .then(response => {
+      if (response.status === 'ok') {
+        response.message && alert('Successfully passed assertion challenge. Message from server: ${response.message}')
+        loadMainContainer()
+      } else {
+        alert(`Error passing assertionChallenge: ${response.message}`)
+      }
+    })
+    .catch(alert)
 })
 
 const getMakeCredentialsChallenge = async formBody => {
   return fetch('/webauthn/register', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formBody)
+  })
+  .then(response => response.json())
+  .then(response => {
+    if (response.status !== 'ok') alert(`Server responded with error: ${response.message}`)
+
+    return response
+  })
+  .catch(alert)
+}
+
+const getAssertionChallenge = formBody => {
+  return fetch('/webauthn/login', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formBody)
+  })
+  .then(response => response.json())
+  .then(response => {
+    if (response.status !== 'ok') alert(`Server responded with error: ${response.message}`)
+
+    return response
+  })
+  .catch(alert)
+}
+
+const sendWebAuthnResponse = body => {
+  return fetch('/webauthn/response', {
     method: 'POST',
     credentials: 'include',
     headers: {
