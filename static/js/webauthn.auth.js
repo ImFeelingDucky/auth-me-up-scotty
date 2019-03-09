@@ -16,26 +16,25 @@ $('#register').submit(async function (event) {
   // Ask server for a challenge for this username.
   const response = await getMakeCredentialsChallenge({ username, name })
 
-  const responseLogMessage = `Got MakeCredential Challenge from server, which we are about to use on navigator.credentials.create()
-response: ${JSON.stringify(response)}`
-  alert(responseLogMessage)
-  console.log(responseLogMessage)
-
   // The server will return a challenge in JSON, but we need `challenge` and `user.id` as Uint8Array buffers. Let's convert.
   const publicKey = preformatMakeCredReq(response)
+
+  const responseLogMessage = `Got MakeCredential Challenge from server, which we are about to use on navigator.credentials.create()
+response: ${JSON.stringify(publicKey)}`
+  alert(responseLogMessage)
+  console.log(responseLogMessage)
 
   // It is now in the correct format, and we can ask the browser to create a new credential for this user
   const newCred = await navigator.credentials.create({ publicKey })
 
-  alert(`navigator credentials creation resulted in: ${JSON.stringify(newCred)}`)
-
   const makeCredResponse = publicKeyCredentialToJSON(newCred)
+
+  alert(`navigator credentials creation resulted in: ${JSON.stringify(makeCredResponse)}`)
 
   // Send the completed challenge back to the server
   const credResponse = await sendWebAuthnResponse(makeCredResponse)
 
-  // We caught the condition where `response.status !== 'ok'` in `sendWebAuthnResponse
-
+  // We caught the condition where `response.status !== 'ok'` in `sendWebAuthnResponse, so this should be fine
   loadMainContainer()
 })
 
@@ -81,7 +80,7 @@ const getMakeCredentialsChallenge = async formBody => {
   })
   .then(response => response.json())
   .then(response => {
-    if (response.status !== 'ok') alert(`Server responded with error: ${response.message}`)
+    if (response.status !== 'ok') alert(`Server responded with error in getMakeCredentialsChallenge: ${response.message}`)
 
     return response
   })
@@ -99,11 +98,11 @@ const getAssertionChallenge = formBody => {
   })
   .then(response => response.json())
   .then(response => {
-    if (response.status !== 'ok') alert(`Server responded with error: ${response.message}`)
+    if (response.status !== 'ok') alert(`Server responded with error in getAssertionChallenge: ${response.message}`)
 
     return response
   })
-  .catch(alert)
+  .catch(err => alert(`getAssertionChallenge failed :( with error: ${err})`))
 }
 
 const sendWebAuthnResponse = body => {
@@ -117,8 +116,9 @@ const sendWebAuthnResponse = body => {
   })
   .then(response => response.json())
   .then(response => {
-    if (response.status !== 'ok') alert(`Server responded with error: ${response.message}`)
+    if (response.status !== 'ok') alert(`Server responded with error in sendWebAuthnResponse: ${response.message}`)
 
     return response
   })
+  .catch(err => alert(`sendWebAuthnResponse failed :( with error: ${err})`))
 }
