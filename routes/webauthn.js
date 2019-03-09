@@ -8,10 +8,10 @@ const database  = require('./db');
 /* ---------- ROUTES START ---------- */
 
 // Give user registration challenge
-router.post('/register', (request, response) => {
+router.post('/register', (req, res) => {
   // Check submitted data and enter it into database
-  if (!request.body || !request.body.username || !request.body.name) {
-    response.json({
+  if (!req.body || !req.body.username || !req.body.name) {
+    res.json({
       status: 'failed',
       message: 'Request missing name or username field!'
     })
@@ -19,10 +19,10 @@ router.post('/register', (request, response) => {
     return
   }
 
-  const { username, name } = request.body
+  const { username, name } = req.body
 
   if (database[username] && database[username].registered) {
-    response.json({
+    res.json({
       status: 'failed',
       message: `Username ${username} already exists!`
     })
@@ -41,12 +41,12 @@ router.post('/register', (request, response) => {
   const challengeMakeCred = utils.generateServerMakeCredRequest(username, name, database[username].id)
   challengeMakeCred.status = 'ok'
 
-  console.log(`session is: ${JSON.stringify(request.session)}`)
+  console.log(`session is: ${JSON.stringify(req.session)}`)
 
-  request.session.challenge = challengeMakeCred.challenge
-  request.session.username = username
+  req.session.challenge = challengeMakeCred.challenge
+  req.session.username = username
 
-  response.json(challengeMakeCred)
+  res.json(challengeMakeCred)
 })
 
 // Where clients post their completed challenges to
@@ -60,9 +60,9 @@ router.post('/response', (req, res) => {
   const clientData = JSON.parse(base64url.decode(webAuthnResponse.response.clientDataJSON))
 
   // Check if the challenge they completed was the challenge we asked them to complete
-  if (clientData.challenge !== req.session.challenge) replyWithFail('Challenges don\'t match!')
+  if (clientData.challenge !== req.session.challenge) replyWithFail(res, 'Challenges don\'t match!')
 
-  if (clientData.origin !== config.origin) replyWithFail('Origins don\'t match!')
+  if (clientData.origin !== config.origin) replyWithFail(res, 'Origins don\'t match!')
 
   // The meaty part!
   // Check that they completed the challenge successfully
@@ -80,27 +80,27 @@ router.post('/response', (req, res) => {
     // This is get assertion
     // Verify that they passed the login challenge
     result = utils.verifyAuthenticatorAssertionResponse(webauthnResp, database[req.session.username].authenticators)
-  } else replyWithFail('Cannot determine type of response: both attestationObject and authenticatorData were nullish')
+  } else replyWithFail(res, 'Cannot determine type of response: both attestationObject and authenticatorData were nullish')
 
   if (result.verified) {
     req.session.loggedIn = true
-    response.json({ status: 'ok', message: 'You are now logged in' })
+    res.json({ status: 'ok', message: 'You are now logged in' })
   } else {
-    replyWithFail('Can not authenticate signature!')
+    replyWithFail(res, 'Can not authenticate signature!')
   }
 })
 
 // Give user login challenge
 router.post('/login', (req, res) => {
   if (!req.body || !req.body.username) {
-    replyWithFail('Request missing username field!')
+    replyWithFail(res, 'Request missing username field!')
     return
   }
 
   const { username } = req.body
 
   if (!database[username] || database[username].registered) {
-    replyWithFail(`User ${username} does not exist!`)
+    replyWithFail(res, `User ${username} does not exist!`)
 
     return
   }

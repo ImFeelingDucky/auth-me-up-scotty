@@ -96,7 +96,9 @@ const getAssertionChallenge = formBody => {
     },
     body: JSON.stringify(formBody)
   })
+  .catch(err => alert(`getAssertionChallenge fetch failed`))
   .then(response => response.json())
+  .catch(err => alert(`getAssertionChallenge response.json() failed`))
   .then(response => {
     if (response.status !== 'ok') alert(`Server responded with error in getAssertionChallenge: ${response.message}`)
 
